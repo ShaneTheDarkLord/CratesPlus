@@ -64,7 +64,7 @@ public class Crate {
 		if (!cratesPlus.getConfig().isSet("Crates." + name + ".Key") || !cratesPlus.getConfig().isSet("Crates." + name + ".Key.Item") || !cratesPlus.getConfig().isSet("Crates." + name + ".Key.Name") || !cratesPlus.getConfig().isSet("Crates." + name + ".Key.Enchanted"))
 			return;
 
-		this.key = new Key(name, Material.valueOf(cratesPlus.getConfig().getString("Crates." + name + ".Key.Item")), cratesPlus.getConfig().getString("Crates." + name + ".Key.Name").replaceAll("%type%", getName(true)), cratesPlus.getConfig().getBoolean("Crates." + name + ".Key.Enchanted"), cratesPlus);
+		this.key = new Key(name, Material.valueOf(cratesPlus.getConfig().getString("Crates." + name + ".Key.Item")), cratesPlus.getConfig().getString("Crates." + name + ".Key.Name").replaceAll("%type%", getName(true)), cratesPlus.getConfig().getBoolean("Crates." + name + ".Key.Enchanted"), (byte) cratesPlus.getConfig().getInt("Crates." + name + ".Key.Data", 0), cratesPlus);
 
 		if (cratesPlus.getConfig().isSet("Crates." + name + ".Key.Lore")) {
 			List<String> lore = new ArrayList<>();

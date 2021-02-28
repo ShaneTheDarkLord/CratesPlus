@@ -8,6 +8,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
 
 public class Key {
 	private CratesPlus cratesPlus;
@@ -16,8 +17,9 @@ public class Key {
 	private String name = "";
 	private List<String> lore = null;
 	private boolean enchanted = false;
+	private byte data = 0;
 
-	public Key(String crateName, Material material, String name, boolean enchanted, CratesPlus cratesPlus) {
+	public Key(String crateName, Material material, String name, boolean enchanted, byte data, CratesPlus cratesPlus) {
 		this.cratesPlus = cratesPlus;
 		this.crateName = crateName;
 		if (material == null)
@@ -25,6 +27,7 @@ public class Key {
 		this.material = material;
 		this.name = name;
 		this.enchanted = enchanted;
+		this.data = data;
 	}
 
 	public Material getMaterial() {
@@ -76,6 +79,9 @@ public class Key {
 		keyItem.setItemMeta(keyItemMeta);
 		if (amount > 1)
 			keyItem.setAmount(amount);
+		if (keyItem.getData() != null)
+			keyItem.getData().setData(data);
+		else CratesPlus.getOpenHandler().getCratesPlus().getLogger().log(Level.WARNING, "keyItem.getData().setData produced a NullPointerException!");
 		return keyItem;
 	}
 
