@@ -31,6 +31,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class CratesPlus extends JavaPlugin implements Listener {
+    private static CratesPlus plugin;
     private String pluginPrefix = "";
     private String updateMessage = "";
     private String configBackup = null;
@@ -46,6 +47,7 @@ public class CratesPlus extends JavaPlugin implements Listener {
     private ArrayList<UUID> creatingCrate = new ArrayList<>();
 
     public void onEnable() {
+        plugin = this;
         Server server = getServer();
         Pattern pattern = Pattern.compile("(^[^\\-]*)");
         Matcher matcher = pattern.matcher(server.getBukkitVersion());
@@ -439,4 +441,5 @@ public class CratesPlus extends JavaPlugin implements Listener {
         creatingCrate.remove(uuid);
     }
 
+    public static CratesPlus getInstance() { return plugin; }
 }

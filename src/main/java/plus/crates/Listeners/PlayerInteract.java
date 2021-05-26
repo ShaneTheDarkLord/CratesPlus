@@ -7,6 +7,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import plus.crates.Crates.Crate;
 import plus.crates.Crates.KeyCrate;
@@ -27,23 +28,20 @@ public class PlayerInteract implements Listener {
 
     @EventHandler(ignoreCancelled = true)
     public void onPlayerInteract(PlayerInteractEvent event) {
+        String crateType;
         Player player = event.getPlayer();
         if (event.getClickedBlock() == null || event.getClickedBlock().getType() == Material.AIR)
             return;
-        ItemStack item = cratesPlus.getVersion_util().getItemInPlayersHand(player);
-        ItemStack itemOff = cratesPlus.getVersion_util().getItemInPlayersOffHand(player);
-
-        String crateType;
+        ItemStack item = this.cratesPlus.getVersion_util().getItemInPlayersHand(player);
+        ItemStack itemOff = this.cratesPlus.getVersion_util().getItemInPlayersOffHand(player);
         if (event.getClickedBlock().getMetadata("CrateType").isEmpty()) {
-            // Try to use the old method of getting the crate!
             if (event.getClickedBlock().getType() != Material.CHEST)
                 return;
-            Chest chest = (Chest) event.getClickedBlock().getState();
-            Inventory chestInventory = chest.getInventory();
-            String title = chest.getCustomName();
-            if (chestInventory.getTitle() == null || !chestInventory.getTitle().contains(" Crate!"))
-        return; 
-            crateType = ChatColor.stripColor(title.replaceAll(" Crate", ""));
+            Chest chest = (Chest)event.getClickedBlock().getState();
+            String str = chest.getCustomName();
+            if (str == null || !str.contains(" Crate!"))
+                return;
+            crateType = ChatColor.stripColor(str.replaceAll(" Crate!", ""));
         } else {
             crateType = event.getClickedBlock().getMetadata("CrateType").get(0).asString();
         }

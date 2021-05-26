@@ -97,7 +97,7 @@ public class BasicGUIOpener extends Opener implements Listener {
         int max = crate.getWinnings().size() - 1;
         int min = 0;
         currentItem[0] = random.nextInt((max - min) + 1) + min;
-        winGUI = Bukkit.createInventory(null, 45, crate.getColor() + crate.getName() + " Win");
+        winGUI = Bukkit.createInventory(null, 54, crate.getColor() + crate.getName() + " Win");
         guis.put(player.getUniqueId(), winGUI);
         player.openInventory(winGUI);
         final int maxTimeTicks = length * 10;
@@ -110,7 +110,7 @@ public class BasicGUIOpener extends Opener implements Listener {
                 return;
             }
             Integer i = 0;
-            while (i < 45) {
+            while (i < 54) {
                 if (i == 22) {
                     i++;
                     if (crate.getWinnings().size() == currentItem[0])

@@ -7,6 +7,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.scheduler.BukkitRunnable;
+import plus.crates.CratesPlus;
 
 import java.util.*;
 
@@ -40,12 +42,12 @@ public class GUI {
         put(17, 31);
         put(18, 32);
         put(19, 33);
-        put(20, 34);
+        put(20, 34);;
     }};
 
     private String title;
-    private NavigableMap<Integer, ItemStack> items = new TreeMap<>();
-    private HashMap<Integer, ClickHandler> clickHandlers = new HashMap<>();
+    private final NavigableMap<Integer, ItemStack> items = new TreeMap<>();
+    private final HashMap<Integer, ClickHandler> clickHandlers = new HashMap<>();
     private ClickHandler goBackHandler = null;
     private boolean showPages = false;
 
@@ -89,12 +91,12 @@ public class GUI {
     }
 
     public void handleClick(Player player, Integer slot) {
-        if (slot == 48 && getPlayerPage(player) <= 1 && getGoBackHandler() != null) {
+        if (slot == 38 && getPlayerPage(player) <= 1 && getGoBackHandler() != null) {
             getGoBackHandler().doClick(player, this);
-        } else if (slot == 48 && getPlayerPage(player) > 1) {
+        } else if (slot == 38 && getPlayerPage(player) > 1) {
             GUI.ignoreClosing.add(player.getUniqueId());
             open(player, getPlayerPage(player) - 1);
-        } else if (slot == 50) {
+        } else if (slot == 42) {
             GUI.ignoreClosing.add(player.getUniqueId());
             open(player, getPlayerPage(player) + 1);
         } else {
@@ -155,6 +157,7 @@ public class GUI {
         if (getGoBackHandler() != null || page > 1 || pages > page)
             size = size + 9;
 
+
         String title = getTitle();
         if (isShowPages()) {
             title += " (Page " + page + "/" + pages + ")";
@@ -173,21 +176,21 @@ public class GUI {
             ItemMeta backMeta = back.getItemMeta();
             backMeta.setDisplayName(ChatColor.YELLOW + "Go Back");
             back.setItemMeta(backMeta);
-            inventory.setItem(48, back);
+            inventory.setItem(38, back);
         } else if (page > 1) {
             ItemStack prev = new ItemStack(Material.ARROW);
             ItemMeta prevMeta = prev.getItemMeta();
             prevMeta.setDisplayName(ChatColor.YELLOW + "Previous Page");
             prev.setItemMeta(prevMeta);
-            inventory.setItem(48, prev);
+            inventory.setItem(38, prev);
         }
-
         if (pages > page) {
-            ItemStack prev = new ItemStack(Material.ARROW);
-            ItemMeta prevMeta = prev.getItemMeta();
-            prevMeta.setDisplayName(ChatColor.YELLOW + "Next Page");
-            prev.setItemMeta(prevMeta);
-            inventory.setItem(50, prev);
+            ItemStack forward = new ItemStack(Material.ARROW);
+            ItemMeta forwardMeta = forward.getItemMeta();
+            forwardMeta.setDisplayName(ChatColor.YELLOW + "Next Page");
+            forward.setItemMeta(forwardMeta);
+            inventory.setItem(42, forward);
+            System.out.println(page);
         }
 
         return inventory;
@@ -200,7 +203,12 @@ public class GUI {
     public void open(Player player, Integer page) {
         guis.put(player.getUniqueId(), this);
         pageTracker.put(player.getUniqueId(), page);
-        player.openInventory(create(page));
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                player.openInventory(create(page));
+            }
+        }.runTaskLater(CratesPlus.getInstance(), 1L);
     }
 
     public abstract static class ClickHandler {
