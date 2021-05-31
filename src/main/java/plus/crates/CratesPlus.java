@@ -25,6 +25,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class CratesPlus extends JavaPlugin implements Listener {
+	private static CratesPlus plugin;
 	private String pluginPrefix = ChatColor.GRAY + "[" + ChatColor.AQUA + "CratesPlus" + ChatColor.GRAY + "] " + ChatColor.RESET;
 	private String updateMessage = "";
 	private String configBackup = null;
@@ -877,6 +878,9 @@ public class CratesPlus extends JavaPlugin implements Listener {
 
 	public void removeCreating(UUID uuid) {
 		creatingCrate.remove(uuid);
+	}
+	public static CratesPlus getInstance() {
+		return plugin; 
 	}
 
 }
