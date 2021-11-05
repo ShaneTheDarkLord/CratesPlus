@@ -23,10 +23,7 @@ import plus.crates.Listeners.PlayerJoin;
 import plus.crates.Utils.*;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -44,7 +41,7 @@ public class CratesPlus extends JavaPlugin implements Listener {
     private String bukkitVersion = "0.0";
     private Version_Util version_util;
     private static OpenHandler openHandler;
-    private ArrayList<UUID> creatingCrate = new ArrayList<>();
+    private final ArrayList<UUID> creatingCrate = new ArrayList<>();
 
     public void onEnable() {
         plugin = this;
@@ -61,6 +58,7 @@ public class CratesPlus extends JavaPlugin implements Listener {
         if (getConfig().isSet("Bukkit Version"))
             bukkitVersion = getConfig().getString("Bukkit Version");
 
+        assert bukkitVersion != null;
         if (LinfootUtil.versionCompare(bukkitVersion, "1.14.2") > 0) {
             // This means the plugin is using something newer than the latest tested build... we'll show a warning but carry on as usual
             getLogger().warning("CratesPlus has not yet been officially tested with Bukkit " + bukkitVersion + " but should still work");
@@ -74,10 +72,8 @@ public class CratesPlus extends JavaPlugin implements Listener {
             version_util = new Version_1_8(this);
         } else if (LinfootUtil.versionCompare(bukkitVersion, "1.7") > -1) {
             // Use Default Util
-            getLogger().warning("CratesPlus does NOT fully support Bukkit 1.7, if you have issues please report them but they may not be fixed");
             version_util = new Version_Util(this);
         } else {
-            getLogger().severe("CratesPlus does NOT support Bukkit " + bukkitVersion + ", if you believe this is an error please let me know");
             if (!getConfig().isSet("Ignore Version") || !getConfig().getBoolean("Ignore Version")) { // People should only ignore this in the case of an error, doing an ignore on a unsupported version could break something
                 setEnabled(false);
                 return;
@@ -93,7 +89,7 @@ public class CratesPlus extends JavaPlugin implements Listener {
 
         StorageHandler.StorageType storageType = StorageHandler.StorageType.FLAT;
         try {
-            storageType = StorageHandler.StorageType.valueOf(getConfig().getString("Storage Type", "FLAT").toUpperCase());
+            storageType = StorageHandler.StorageType.valueOf(Objects.requireNonNull(getConfig().getString("Storage Type", "FLAT")).toUpperCase());
         } catch (Exception e) {
             getLogger().warning(getConfig().getString("Storage Type", "FLAT") + " is not a valid storage type! Falling back to flat!");
         }
@@ -106,6 +102,7 @@ public class CratesPlus extends JavaPlugin implements Listener {
                 messagesFile.createNewFile();
                 InputStream inputStream = getResource("messages.yml");
                 OutputStream outputStream = new FileOutputStream(messagesFile);
+                assert inputStream != null;
                 ByteStreams.copy(inputStream, outputStream);
             } catch (IOException e) {
                 e.printStackTrace();
@@ -133,10 +130,10 @@ public class CratesPlus extends JavaPlugin implements Listener {
         crateHandler = new CrateHandler(this);
 
         // Do Prefix
-        pluginPrefix = ChatColor.translateAlternateColorCodes('&', messagesConfig.getString("Prefix", "&7[&bCratesPlus&7]")) + " " + ChatColor.RESET;
+        pluginPrefix = ChatColor.translateAlternateColorCodes('&', Objects.requireNonNull(messagesConfig.getString("Prefix", "&8[&6Complex&eCrates&8] &r")));
 
         // Register /crate command
-        Bukkit.getPluginCommand("crate").setExecutor(new CrateCommand(this));
+        Objects.requireNonNull(Bukkit.getPluginCommand("crate")).setExecutor(new CrateCommand(this));
 
         // Register Events
         Bukkit.getPluginManager().registerEvents(new BlockListeners(this), this);
@@ -151,10 +148,6 @@ public class CratesPlus extends JavaPlugin implements Listener {
         loadMetaData();
 
         console.sendMessage(ChatColor.AQUA + getDescription().getName() + " Version " + getDescription().getVersion());
-        if (getDescription().getVersion().contains("SNAPSHOT")) { // Added this because some people didn't really understand what a "snapshot" is...
-            console.sendMessage(ChatColor.RED + "Warning: You are running a snapshot build of CratesPlus");
-            console.sendMessage(ChatColor.RED + "It is advised that you do NOT run this on a production server!");
-        }
 
         switch (getHologramHandler().getHologramPlugin()) {
             default:
@@ -176,10 +169,6 @@ public class CratesPlus extends JavaPlugin implements Listener {
                     configBackup = null;
                 }
             }
-        }
-
-        if (getConfig().getBoolean("Update Checks", true)) {
-            getServer().getScheduler().runTaskLaterAsynchronously(this, () -> checkUpdate(console), 10L);
         }
     }
 
@@ -220,53 +209,11 @@ public class CratesPlus extends JavaPlugin implements Listener {
         }
         return MCDebug.paste(fileName, lines);
     }
-
-    private void checkUpdate(final ConsoleCommandSender console) {
-        String updateBranch = getConfig().getString("Update Branch");
-
-        if (getDescription().getVersion().contains("SNAPSHOT"))
-            updateBranch = "snapshot";//Force snapshot branch on snapshot builds
-
-        String branch = updateBranch.toLowerCase();
-
-        if (branch.equalsIgnoreCase("snapshot")) {
-            console.sendMessage(ChatColor.RED + "WARNING: Snapshot updates are not recommended on production servers");
-        }
-        console.sendMessage(ChatColor.GREEN + "Checking for updates via " + branch + " branch...");
-        final LinfootUpdater updater = new LinfootUpdater(this, branch);
-        final LinfootUpdater.UpdateResult snapShotResult = updater.getResult();
-        switch (snapShotResult) {
-            default:
-            case FAILED:
-                updateAvailable = false;
-                updateMessage = pluginPrefix + "Failed to check for updates. Will try again later.";
-                getServer().getScheduler().runTaskLaterAsynchronously(this, () -> checkUpdate(console), 60 * (60 * 20L)); // Checks again an hour later
-                break;
-            case NO_UPDATE:
-                updateAvailable = false;
-                updateMessage = pluginPrefix + "No update was found, you are running the latest version. Will check again later.";
-                getServer().getScheduler().runTaskLaterAsynchronously(this, () -> checkUpdate(console), 60 * (60 * 20L)); // Checks again an hour later
-                break;
-            case SNAPSHOT_UPDATE_AVAILABLE:
-                updateAvailable = true;
-                updateMessage = pluginPrefix + "A snapshot update for CratesPlus is available, new version is " + updater.getVersion() + ". Your installed version is " + getDescription().getVersion() + ".\nPlease update to the latest version :)";
-                break;
-            case UPDATE_AVAILABLE:
-                updateAvailable = true;
-                updateMessage = pluginPrefix + "An update for CratesPlus is available, new version is " + updater.getVersion() + ". Your installed version is " + getDescription().getVersion() + ".\nPlease update to the latest version :)";
-                break;
-        }
-
-        if (updateMessage != null)
-            console.sendMessage(updateMessage);
-
-    }
-
     public void reloadPlugin() {
         reloadConfig();
 
         // Do Prefix
-        pluginPrefix = ChatColor.translateAlternateColorCodes('&', getConfig().getString("Prefix", "&7[&bCratesPlus&7]")) + " " + ChatColor.RESET;
+        pluginPrefix = ChatColor.translateAlternateColorCodes('&', Objects.requireNonNull(getConfig().getString("Prefix", "&8[&6Complex&eCrates&8] &r")));
 
         // Reload Configuration
         configHandler = new ConfigHandler(getConfig(), this);
@@ -279,7 +226,7 @@ public class CratesPlus extends JavaPlugin implements Listener {
     private void loadMetaData() {
         if (!getStorageHandler().getFlatConfig().isSet("Crate Locations"))
             return;
-        for (String name : getStorageHandler().getFlatConfig().getConfigurationSection("Crate Locations").getKeys(false)) {
+        for (String name : Objects.requireNonNull(getStorageHandler().getFlatConfig().getConfigurationSection("Crate Locations")).getKeys(false)) {
             final Crate crate = configHandler.getCrate(name.toLowerCase());
             if (crate == null)
                 continue;
@@ -305,7 +252,7 @@ public class CratesPlus extends JavaPlugin implements Listener {
                 try {
                     locationObj = new Location(Bukkit.getWorld(strings.get(0)), Double.parseDouble(strings.get(1)), Double.parseDouble(strings.get(2)), Double.parseDouble(strings.get(3)));
                     Block block = locationObj.getBlock();
-                    if (block == null || block.getType().equals(Material.AIR)) {
+                    if (block.getType().equals(Material.AIR)) {
                         getLogger().warning("No block found at " + location + " removing from data.yml");
                         keyCrate.removeFromConfig(locationObj);
                         continue;
@@ -356,7 +303,7 @@ public class CratesPlus extends JavaPlugin implements Listener {
 
                         @Override
                         public String asString() {
-                            return value().toString();
+                            return Objects.requireNonNull(value()).toString();
                         }
 
                         @Override
@@ -442,4 +389,42 @@ public class CratesPlus extends JavaPlugin implements Listener {
     }
 
     public static CratesPlus getInstance() { return plugin; }
+
+    public void logToFile(String message)
+
+    {
+
+        try
+        {
+            File dataFolder = getDataFolder();
+            if(!dataFolder.exists())
+            {
+                dataFolder.mkdir();
+            }
+
+            File saveTo = new File(getDataFolder(), "openings.txt");
+            if (!saveTo.exists())
+            {
+                saveTo.createNewFile();
+            }
+
+
+            FileWriter fw = new FileWriter(saveTo, true);
+
+            PrintWriter pw = new PrintWriter(fw);
+
+            pw.println(message);
+
+            pw.flush();
+
+            pw.close();
+
+        } catch (IOException e)
+        {
+
+            e.printStackTrace();
+
+        }
+
+    }
 }

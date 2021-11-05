@@ -9,7 +9,7 @@ import plus.crates.CratesPlus;
 import plus.crates.Handlers.MessageHandler;
 
 public class PlayerJoin implements Listener {
-    private CratesPlus cratesPlus;
+    private final CratesPlus cratesPlus;
 
     public PlayerJoin(CratesPlus cratesPlus) {
         this.cratesPlus = cratesPlus;

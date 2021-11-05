@@ -192,9 +192,8 @@ public class SettingsHandler implements Listener {
         gui.setItem(2, itemStack, new GUI.ClickHandler() {
             @Override
             public void doClick(Player player, GUI gui) {
-                player.sendMessage(ChatColor.RED + "This feature is currently disabled!");
-//                GUI.ignoreClosing.add(player.getUniqueId());
-//                openCrateWinnings(player, crateName);
+              GUI.ignoreClosing.add(player.getUniqueId());
+              openCrateWinnings(player, crateName);
             }
         });
 

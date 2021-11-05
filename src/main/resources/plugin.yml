@@ -2,12 +2,12 @@ name: CratesPlus
 description: ${project.description}
 main: plus.crates.CratesPlus
 version: ${project.version}
-author: Connor Linfoot
+author: ShaneTheDarkLord
 softdepend: [HolographicDisplays,IndividualHolograms]
 commands:
   crate:
     description: Main CratesPlus command
-    aliases: [cratesplus,crates]
+    aliases: [cratesplus, crates, cp, complexcrates]
 permissions:
   cratesplus.admin:
     default: op

@@ -19,8 +19,8 @@ import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 
 public class PlayerInteract implements Listener {
-    private CratesPlus cratesPlus;
-    private HashMap<String, Long> lastOpended = new HashMap<String, Long>();
+    private final CratesPlus cratesPlus;
+    private final HashMap<String, Long> lastOpended = new HashMap<String, Long>();
 
     public PlayerInteract(CratesPlus cratesPlus) {
         this.cratesPlus = cratesPlus;
@@ -38,10 +38,12 @@ public class PlayerInteract implements Listener {
             if (event.getClickedBlock().getType() != Material.CHEST)
                 return;
             Chest chest = (Chest)event.getClickedBlock().getState();
-            String str = chest.getCustomName();
-            if (str == null || !str.contains(" Crate!"))
+            String title = chest.getCustomName();
+            if (title != null && title.contains(" Crate!"))
+                if (!title.contains(" Crate!"))
                 return;
-            crateType = ChatColor.stripColor(str.replaceAll(" Crate!", ""));
+            assert title != null;
+            crateType = ChatColor.stripColor(title.replaceAll(" Crate!", ""));
         } else {
             crateType = event.getClickedBlock().getMetadata("CrateType").get(0).asString();
         }

@@ -27,6 +27,18 @@ public class CrateOpenEvent extends Event {
             ((VirtualCrate) getCrate()).openGUI(getPlayer());
         } else {
             CratesPlus.getOpenHandler().getOpener(getCrate()).startOpening(getPlayer(), getCrate(), getBlockLocation());
+            if (getCrate().getName().equalsIgnoreCase("uncommon")) {
+                cratesPlus.logToFile(getPlayer() + " Has opened an uncommon crate");
+            }
+            if (getCrate().getName().equalsIgnoreCase("epic")) {
+                cratesPlus.logToFile(getPlayer() + " Has opened an epic crate");
+            }
+            if (getCrate().getName().equalsIgnoreCase("rare")) {
+                cratesPlus.logToFile(getPlayer() + " Has opened a rare crate");
+            }
+            if (getCrate().getName().equalsIgnoreCase("legendary")) {
+                cratesPlus.logToFile(getPlayer() + " Has opened a legendary crate");
+            }
         }
     }
 

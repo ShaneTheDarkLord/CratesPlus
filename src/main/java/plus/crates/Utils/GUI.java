@@ -174,12 +174,14 @@ public class GUI {
         if (page == 1 && getGoBackHandler() != null) {
             ItemStack back = new ItemStack(Material.ARROW);
             ItemMeta backMeta = back.getItemMeta();
+            assert backMeta != null;
             backMeta.setDisplayName(ChatColor.YELLOW + "Go Back");
             back.setItemMeta(backMeta);
             inventory.setItem(38, back);
         } else if (page > 1) {
             ItemStack prev = new ItemStack(Material.ARROW);
             ItemMeta prevMeta = prev.getItemMeta();
+            assert prevMeta != null;
             prevMeta.setDisplayName(ChatColor.YELLOW + "Previous Page");
             prev.setItemMeta(prevMeta);
             inventory.setItem(38, prev);
@@ -187,10 +189,10 @@ public class GUI {
         if (pages > page) {
             ItemStack forward = new ItemStack(Material.ARROW);
             ItemMeta forwardMeta = forward.getItemMeta();
+            assert forwardMeta != null;
             forwardMeta.setDisplayName(ChatColor.YELLOW + "Next Page");
             forward.setItemMeta(forwardMeta);
             inventory.setItem(42, forward);
-            System.out.println(page);
         }
 
         return inventory;

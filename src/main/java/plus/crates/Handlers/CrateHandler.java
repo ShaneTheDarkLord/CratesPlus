@@ -19,10 +19,10 @@ import plus.crates.Utils.LegacyMaterial;
 import java.util.*;
 
 public class CrateHandler {
-    private CratesPlus cratesPlus;
-    private Random rand = new Random();
-    private HashMap<UUID, Opener> openings = new HashMap<>();
-    private HashMap<UUID, HashMap<String, Integer>> pendingKeys = new HashMap<>();
+    private final CratesPlus cratesPlus;
+    private final Random rand = new Random();
+    private final HashMap<UUID, Opener> openings = new HashMap<>();
+    private final HashMap<UUID, HashMap<String, Integer>> pendingKeys = new HashMap<>();
 
     public CrateHandler(CratesPlus cratesPlus) {
         this.cratesPlus = cratesPlus;
@@ -142,7 +142,7 @@ public class CrateHandler {
     }
 
     public void giveCrateKey(OfflinePlayer offlinePlayer) {
-        Set<String> crates = cratesPlus.getConfig().getConfigurationSection("Crates").getKeys(false);
+        Set<String> crates = Objects.requireNonNull(cratesPlus.getConfig().getConfigurationSection("Crates")).getKeys(false);
         Integer random = randInt(0, crates.size() - 1);
         String crateType = "";
         Integer i = 0;
@@ -214,7 +214,7 @@ public class CrateHandler {
 
             ItemStack keyItem = key.getKeyItem(amount);
             HashMap<Integer, ItemStack> remaining = player.getInventory().addItem(keyItem);
-            Integer amountLeft = 0;
+            int amountLeft = 0;
             for (Map.Entry<Integer, ItemStack> item : remaining.entrySet()) {
                 amountLeft += item.getValue().getAmount();
             }
@@ -260,6 +260,7 @@ public class CrateHandler {
 
         ItemStack crateItem = new ItemStack(crate.getBlock(), 1, (short) crate.getBlockData());
         ItemMeta crateMeta = crateItem.getItemMeta();
+        assert crateMeta != null;
         crateMeta.setDisplayName(crate.getName(true) + " Crate");
         List<String> lore = new ArrayList<String>();
         lore.add(ChatColor.GRAY + "Place this crate somewhere!");
@@ -291,26 +292,26 @@ public class CrateHandler {
             String[] args1 = args[0].split("-");
             ItemStack itemStack;
             if (args1.length == 1) {
-                itemStack = new ItemStack(Material.getMaterial(args1[0].toUpperCase()));
+                itemStack = new ItemStack(Objects.requireNonNull(Material.getMaterial(args1[0].toUpperCase())));
             } else {
-                itemStack = new ItemStack(Material.getMaterial(args1[0].toUpperCase()), 1, Byte.parseByte(args1[1]));
+                itemStack = new ItemStack(Objects.requireNonNull(Material.getMaterial(args1[0].toUpperCase())), 1, Byte.parseByte(args1[1]));
             }
             return itemStack;
         } else if (args.length == 2) {
-            return new ItemStack(Material.getMaterial(args[0].toUpperCase()), Integer.parseInt(args[1]));
+            return new ItemStack(Objects.requireNonNull(Material.getMaterial(args[0].toUpperCase())), Integer.parseInt(args[1]));
         } else if (args.length == 3) {
             String[] enchantments = args[2].split("\\|", -1);
-            ItemStack itemStack = new ItemStack(Material.getMaterial(args[0]), Integer.parseInt(args[1]));
+            ItemStack itemStack = new ItemStack(Objects.requireNonNull(Material.getMaterial(args[0])), Integer.parseInt(args[1]));
             for (String e : enchantments) {
                 String[] args1 = e.split("-", -1);
                 if (args1.length == 1) {
                     try {
-                        itemStack.addUnsafeEnchantment(Enchantment.getByName(args1[0]), 1);
+                        itemStack.addUnsafeEnchantment(Objects.requireNonNull(Enchantment.getByName(args1[0])), 1);
                     } catch (Exception ignored) {
                     }
                 } else if (args1.length == 2) {
                     try {
-                        itemStack.addUnsafeEnchantment(Enchantment.getByName(args1[0]), Integer.parseInt(args1[1]));
+                        itemStack.addUnsafeEnchantment(Objects.requireNonNull(Enchantment.getByName(args1[0])), Integer.parseInt(args1[1]));
                     } catch (Exception ignored) {
                     }
                 }
@@ -356,35 +357,36 @@ public class CrateHandler {
                 String[] args1 = args[0].split("-");
                 ItemStack itemStack;
                 if (args1.length == 1) {
-                    itemStack = new ItemStack(Material.getMaterial(args1[0].toUpperCase()));
+                    itemStack = new ItemStack(Objects.requireNonNull(Material.getMaterial(args1[0].toUpperCase())));
                 } else {
-                    itemStack = new ItemStack(Material.getMaterial(args1[0].toUpperCase()), 1, Byte.parseByte(args1[1]));
+                    itemStack = new ItemStack(Objects.requireNonNull(Material.getMaterial(args1[0].toUpperCase())), 1, Byte.parseByte(args1[1]));
                 }
                 return itemStack;
             } else if (args.length == 2) {
                 String[] args1 = args[0].split("-");
                 if (args1.length == 1) {
-                    return new ItemStack(Material.getMaterial(args1[0].toUpperCase()), Integer.parseInt(args[1]));
+                    return new ItemStack(Objects.requireNonNull(Material.getMaterial(args1[0].toUpperCase())), Integer.parseInt(args[1]));
                 } else {
-                    return new ItemStack(Material.getMaterial(args1[0].toUpperCase()), Integer.parseInt(args[1]), Byte.parseByte(args1[1]));
+                    return new ItemStack(Objects.requireNonNull(Material.getMaterial(args1[0].toUpperCase())), Integer.parseInt(args[1]), Byte.parseByte(args1[1]));
                 }
             } else if (args.length == 3) {
                 if (args[2].equalsIgnoreCase("NONE")) {
                     String[] args1 = args[0].split("-");
                     if (args1.length == 1) {
-                        return new ItemStack(Material.getMaterial(args1[0].toUpperCase()), Integer.parseInt(args[1]));
+                        return new ItemStack(Objects.requireNonNull(Material.getMaterial(args1[0].toUpperCase())), Integer.parseInt(args[1]));
                     } else {
-                        return new ItemStack(Material.getMaterial(args1[0].toUpperCase()), Integer.parseInt(args[1]), Byte.parseByte(args1[1]));
+                        return new ItemStack(Objects.requireNonNull(Material.getMaterial(args1[0].toUpperCase())), Integer.parseInt(args[1]), Byte.parseByte(args1[1]));
                     }
                 } else {
                     String[] args1 = args[0].split("-");
                     ItemStack itemStack;
                     if (args1.length == 1) {
-                        itemStack = new ItemStack(Material.getMaterial(args1[0].toUpperCase()), Integer.parseInt(args[1]));
+                        itemStack = new ItemStack(Objects.requireNonNull(Material.getMaterial(args1[0].toUpperCase())), Integer.parseInt(args[1]));
                     } else {
-                        itemStack = new ItemStack(Material.getMaterial(args1[0].toUpperCase()), Integer.parseInt(args[1]), Byte.parseByte(args1[1]));
+                        itemStack = new ItemStack(Objects.requireNonNull(Material.getMaterial(args1[0].toUpperCase())), Integer.parseInt(args[1]), Byte.parseByte(args1[1]));
                     }
                     ItemMeta itemMeta = itemStack.getItemMeta();
+                    assert itemMeta != null;
                     itemMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', args[2]));
                     itemStack.setItemMeta(itemMeta);
                     return itemStack;
@@ -394,26 +396,27 @@ public class CrateHandler {
                 String[] args1 = args[0].split("-");
                 ItemStack itemStack;
                 if (args1.length == 1) {
-                    itemStack = new ItemStack(Material.getMaterial(args1[0].toUpperCase()), Integer.parseInt(args[1]));
+                    itemStack = new ItemStack(Objects.requireNonNull(Material.getMaterial(args1[0].toUpperCase())), Integer.parseInt(args[1]));
                 } else {
-                    itemStack = new ItemStack(Material.getMaterial(args1[0].toUpperCase()), Integer.parseInt(args[1]), Byte.parseByte(args1[1]));
+                    itemStack = new ItemStack(Objects.requireNonNull(Material.getMaterial(args1[0].toUpperCase())), Integer.parseInt(args[1]), Byte.parseByte(args1[1]));
                 }
                 for (String e : enchantments) {
                     args1 = e.split("-", -1);
                     if (args1.length == 1) {
                         try {
-                            itemStack.addUnsafeEnchantment(Enchantment.getByName(args1[0]), 1);
+                            itemStack.addUnsafeEnchantment(Objects.requireNonNull(Enchantment.getByName(args1[0])), 1);
                         } catch (Exception ignored) {
                         }
                     } else if (args1.length == 2) {
                         try {
-                            itemStack.addUnsafeEnchantment(Enchantment.getByName(args1[0]), Integer.parseInt(args1[1]));
+                            itemStack.addUnsafeEnchantment(Objects.requireNonNull(Enchantment.getByName(args1[0])), Integer.parseInt(args1[1]));
                         } catch (Exception ignored) {
                         }
                     }
                 }
                 if (!args[2].equalsIgnoreCase("NONE")) {
                     ItemMeta itemMeta = itemStack.getItemMeta();
+                    assert itemMeta != null;
                     itemMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', args[2]));
                     itemStack.setItemMeta(itemMeta);
                 }
@@ -436,7 +439,7 @@ public class CrateHandler {
         }
         finalString = finalString + ":" + itemStack.getAmount();
 
-        if (itemStack.hasItemMeta() && itemStack.getItemMeta().hasDisplayName()) {
+        if (itemStack.hasItemMeta() && Objects.requireNonNull(itemStack.getItemMeta()).hasDisplayName()) {
             finalString = finalString + ":" + itemStack.getItemMeta().getDisplayName();
         } else {
             finalString = finalString + ":NONE";
