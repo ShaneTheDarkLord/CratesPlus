@@ -3,7 +3,7 @@ description: ${project.description}
 main: plus.crates.CratesPlus
 version: ${project.version}
 author: ShaneTheDarkLord
-softdepend: [HolographicDisplays,IndividualHolograms]
+softdepend: [HolographicDisplays,IndividualHolograms,Multiverse-Core]
 commands:
   crate:
     description: Main CratesPlus command

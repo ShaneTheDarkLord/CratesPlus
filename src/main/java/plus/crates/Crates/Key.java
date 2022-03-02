@@ -17,7 +17,7 @@ public class Key {
     private final Material material;
     private final short data;
     private final String name;
-    private final List<String> lore = new ArrayList<>();
+    private List<String> lore = new ArrayList<>();
     private final boolean enchanted;
 
     public Key(KeyCrate crate, Material material, short data, String name, boolean enchanted, List<String> lore, CratesPlus cratesPlus) {
@@ -68,6 +68,7 @@ public class Key {
         ItemMeta keyItemMeta = keyItem.getItemMeta();
         String title = getName().replaceAll("%type%", getCrate().getName(true));
         keyItemMeta.setDisplayName(title);
+        if (lore == null) lore = getLore();
         keyItemMeta.setLore(getLore());
         ArrayList<String> flags = new ArrayList<>();
         flags.add("HIDE_ENCHANTS");
