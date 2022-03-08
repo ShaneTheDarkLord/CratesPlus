@@ -41,7 +41,7 @@ public class CrateCommand implements CommandExecutor {
     @Override
     public boolean onCommand(final CommandSender sender, Command command, String string, String[] args) {
 
-        if (sender instanceof Player && !sender.hasPermission("cratesplus.admin")) {
+        if (sender instanceof Player && !sender.hasPermission("cratesplus.claim")) {
             if (args.length == 0 || (args.length > 0 && args[0].equalsIgnoreCase("claim"))) {
                 // Assume player and show "claim" GUI
                 doClaim((Player) sender);
@@ -105,50 +105,6 @@ public class CrateCommand implements CommandExecutor {
                     if (sender instanceof Player) {
                         doClaim((Player) sender);
                     }
-                    break;
-                case "debug":
-                    sender.sendMessage(ChatColor.AQUA + "Gathering debug data...");
-
-                    Bukkit.getScheduler().runTaskAsynchronously(cratesPlus, () -> {
-                        sender.sendMessage(ChatColor.AQUA + "Uploading config.yml...");
-                        String configLink = cratesPlus.uploadConfig();
-                        sender.sendMessage(ChatColor.AQUA + "Uploaded config.yml");
-
-                        sender.sendMessage(ChatColor.AQUA + "Uploading data.yml...");
-                        String dataLink = cratesPlus.uploadData();
-                        sender.sendMessage(ChatColor.AQUA + "Uploaded data.yml");
-
-                        sender.sendMessage(ChatColor.AQUA + "Uploading messages.yml...");
-                        String messagesLink = cratesPlus.uploadMessages();
-                        sender.sendMessage(ChatColor.AQUA + "Uploaded messages.yml");
-
-                        sender.sendMessage(ChatColor.AQUA + "Generating plugin list...");
-                        String plugins = "";
-                        for (Plugin plugin : Bukkit.getPluginManager().getPlugins()) {
-                            plugins += plugin.getName() + " - Version: " + plugin.getDescription().getVersion() + "\n";
-                        }
-                        sender.sendMessage(ChatColor.AQUA + "Completed plugin list");
-
-                        sender.sendMessage(ChatColor.AQUA + "Uploading plugin list...");
-                        String pluginsLink = MCDebug.paste("plugins.txt", plugins);
-                        sender.sendMessage(ChatColor.AQUA + "Uploaded plugin list");
-
-                        sender.sendMessage(ChatColor.AQUA + "Uploading data to MC Debug...");
-                        String finalLinks = uploadDebugData(configLink, dataLink, messagesLink, pluginsLink);
-                        String[] links = null;
-                        if (finalLinks != null) {
-                            links = finalLinks.split("\\|");
-                        }
-
-                        sender.sendMessage(ChatColor.GREEN + "Completed uploading debug data!");
-                        if (links != null && links.length == 2) {
-                            sender.sendMessage(ChatColor.GREEN + "You can use the following link to manage your data " + ChatColor.GOLD + links[1]);
-                            sender.sendMessage(ChatColor.GREEN + "You can use the following link to share your data " + ChatColor.GOLD + links[0]);
-                        } else {
-                            sender.sendMessage(ChatColor.GREEN + "You can use the following link to share your data " + ChatColor.GOLD + finalLinks);
-                        }
-
-                    });
                     break;
                 case "opener":
                 case "openers":
@@ -330,62 +286,58 @@ public class CrateCommand implements CommandExecutor {
 
                     ((MysteryCrate) crate).openGUI((Player) sender);
                     break;
-                case "key":
-                    cratesPlus.getLogger().warning("\"/crate key\" was used but is deprecated from version 5, please use \"give\" instead.");
-                    if (sender instanceof Player) {
-                        sender.sendMessage("\"/crate key\" was used but is deprecated from version 5, please use \"give\" instead.");
-                    }
                 case "give":
-                    if (args.length < 3) {
-                        sender.sendMessage(cratesPlus.getPluginPrefix() + ChatColor.RED + "Correct Usage: /crate give <player/all/alloffline> <crate> [amount]");
-                        return false;
-                    }
-
-                    Integer amount = 1;
-                    if (args.length > 3) {
-                        try {
-                            amount = Integer.parseInt(args[3]);
-                        } catch (Exception ignored) {
-                            sender.sendMessage(cratesPlus.getPluginPrefix() + ChatColor.RED + "Invalid amount");
+                    if (sender.hasPermission("cratesplus.keygive")) {
+                        if (args.length < 3) {
+                            sender.sendMessage(cratesPlus.getPluginPrefix() + ChatColor.RED + "Correct Usage: /crate give <player/all/alloffline> <crate> [amount]");
                             return false;
                         }
-                    }
 
-                    OfflinePlayer offlinePlayer = null;
-                    if (!args[1].equalsIgnoreCase("all") && !args[1].equalsIgnoreCase("alloffline")) {
-                        offlinePlayer = Bukkit.getOfflinePlayer(args[1]);
-                        if (offlinePlayer == null || (!offlinePlayer.hasPlayedBefore() && !offlinePlayer.isOnline())) { // Check if the player is online as "hasPlayedBefore" doesn't work until they disconnect?
-                            sender.sendMessage(cratesPlus.getPluginPrefix() + ChatColor.RED + "The player " + args[1] + " was not found");
+                        Integer amount = 1;
+                        if (args.length > 3) {
+                            try {
+                                amount = Integer.parseInt(args[3]);
+                            } catch (Exception ignored) {
+                                sender.sendMessage(cratesPlus.getPluginPrefix() + ChatColor.RED + "Invalid amount");
+                                return false;
+                            }
+                        }
+
+                        OfflinePlayer offlinePlayer = null;
+                        if (!args[1].equalsIgnoreCase("all") && !args[1].equalsIgnoreCase("alloffline")) {
+                            offlinePlayer = Bukkit.getOfflinePlayer(args[1]);
+                            if (offlinePlayer == null || (!offlinePlayer.hasPlayedBefore() && !offlinePlayer.isOnline())) { // Check if the player is online as "hasPlayedBefore" doesn't work until they disconnect?
+                                sender.sendMessage(cratesPlus.getPluginPrefix() + ChatColor.RED + "The player " + args[1] + " was not found");
+                                return false;
+                            }
+                        }
+
+                        crateType = args[2];
+
+                        crate = cratesPlus.getConfigHandler().getCrates().get(crateType.toLowerCase());
+                        if (crate == null) {
+                            sender.sendMessage(cratesPlus.getPluginPrefix() + ChatColor.RED + "Crate not found");
                             return false;
                         }
-                    }
 
-                    crateType = args[2];
-
-                    crate = cratesPlus.getConfigHandler().getCrates().get(crateType.toLowerCase());
-                    if (crate == null) {
-                        sender.sendMessage(cratesPlus.getPluginPrefix() + ChatColor.RED + "Crate not found");
-                        return false;
-                    }
-
-                    if (offlinePlayer == null) {
-                        if (args[1].equalsIgnoreCase("all")) {
-                            crate.giveAll(amount);
-                            sender.sendMessage(cratesPlus.getPluginPrefix() + ChatColor.GREEN + "Given all online players a crate/key");
-                        } else if (args[1].equalsIgnoreCase("alloffline")) {
-                            /**
-                             * TODO TEST THIS and maybe give better explanation when they do `/crate give`?
-                             */
-                            crate.giveAllOffline(amount);
-                            sender.sendMessage(cratesPlus.getPluginPrefix() + ChatColor.GREEN + "Given all online and offline players a crate/key");
+                        if (offlinePlayer == null) {
+                            if (args[1].equalsIgnoreCase("all")) {
+                                crate.giveAll(amount);
+                                sender.sendMessage(cratesPlus.getPluginPrefix() + ChatColor.GREEN + "Given all online players a crate/key");
+                            } else if (args[1].equalsIgnoreCase("alloffline")) {
+                                /**
+                                 * TODO TEST THIS and maybe give better explanation when they do `/crate give`?
+                                 */
+                                crate.giveAllOffline(amount);
+                                sender.sendMessage(cratesPlus.getPluginPrefix() + ChatColor.GREEN + "Given all online and offline players a crate/key");
+                            }
+                        } else {
+                            if (crate.give(offlinePlayer, amount))
+                                sender.sendMessage(cratesPlus.getPluginPrefix() + ChatColor.GREEN + "Given " + offlinePlayer.getName() + " a crate/key");
+                            else
+                                sender.sendMessage(cratesPlus.getPluginPrefix() + ChatColor.RED + "Failed to give crate/key");
                         }
-                    } else {
-                        if (crate.give(offlinePlayer, amount))
-                            sender.sendMessage(cratesPlus.getPluginPrefix() + ChatColor.GREEN + "Given " + offlinePlayer.getName() + " a crate/key");
-                        else
-                            sender.sendMessage(cratesPlus.getPluginPrefix() + ChatColor.RED + "Failed to give crate/key");
                     }
-
                     break;
                 case "crate":
                 case "keycrate":
@@ -428,19 +380,14 @@ public class CrateCommand implements CommandExecutor {
         } else {
 
             // Help Messages
-            sender.sendMessage(cratesPlus.getPluginPrefix() + ChatColor.AQUA + "----- CratePlus v" + cratesPlus.getDescription().getVersion() + " Help -----");
-            sender.sendMessage(cratesPlus.getPluginPrefix() + ChatColor.AQUA + "/crate reload " + ChatColor.YELLOW + "Reload configuration for CratesPlus (Experimental)");
-//			sender.sendMessage(cratesPlus.getPluginPrefix() + ChatColor.AQUA + "/crate settings " + ChatColor.YELLOW + "Edit settings of CratesPlus and crate winnings");
-            sender.sendMessage(cratesPlus.getPluginPrefix() + ChatColor.AQUA + "/crate create <name> " + ChatColor.YELLOW + "Create a new crate");
-            sender.sendMessage(cratesPlus.getPluginPrefix() + ChatColor.AQUA + "/crate rename <old name> <new name> " + ChatColor.YELLOW + "Rename a crate");
-            sender.sendMessage(cratesPlus.getPluginPrefix() + ChatColor.AQUA + "/crate delete <name> " + ChatColor.YELLOW + "Delete a crate");
-            sender.sendMessage(cratesPlus.getPluginPrefix() + ChatColor.AQUA + "/crate give <player/all> [crate] [amount] " + ChatColor.YELLOW + "Give player a crate/key, if no crate given it will be random");
-            sender.sendMessage(cratesPlus.getPluginPrefix() + ChatColor.AQUA + "/crate crate <type> [player] " + ChatColor.YELLOW + "Give player a crate to be placed, for use by admins");
-            sender.sendMessage(cratesPlus.getPluginPrefix() + ChatColor.AQUA + "/crate debug " + ChatColor.YELLOW + "Generates a debug link for sending info about your server and config");
-//			sender.sendMessage(cratesPlus.getPluginPrefix() + ChatColor.AQUA + "/crate claim " + ChatColor.YELLOW + "Claim any keys that are waiting for you");
-
-
-            //			sender.sendMessage(cratesPlus.getPluginPrefix() + ChatColor.AQUA + "/crate opener <name/type> <opener> " + ChatColor.YELLOW + "- Change the opener for a specific crate or crate type");
+            sender.sendMessage("§e§l--------§6§l» §3§lKoffee§b§lCrates §fHelp §6§l«§e§l--------");
+            sender.sendMessage("§6§l»§r §b/crate reload » §eReload configuration for KoffeeCrates");
+            sender.sendMessage("§6§l»§r §b/crate create <name> » §eCreate a new crate");
+            sender.sendMessage("§6§l»§r §b/crate rename <old name> <new name> » §eRename a crate");
+            sender.sendMessage("§6§l»§r §b/crate delete <name> » §eDelete a crate from the config");
+            sender.sendMessage("§6§l»§r §b/crate give <player/all> [crate] [amount] » §eGive player a crate/key, if no crate given it will be random");
+            sender.sendMessage("§6§l»§r §b/crate crate <type> [player] » §eGive player a crate to be placed, for use by admins");
+            sender.sendMessage("§e§l--------§6§l» §3§lKoffee§b§lCrates §fHelp §6§l«§e§l--------");
         }
 
         return true;
@@ -480,34 +427,6 @@ public class CrateCommand implements CommandExecutor {
             i++;
         }
         gui.open(player);
-    }
-
-    private String uploadDebugData(String configLink, String dataLink, String messagesLink, String pluginsLink) {
-        String urlStr = "http://mcdebug.xyz/api/v2/submit/?plugin=cratesplus&config=" + configLink + "&data=" + dataLink + "&messages=" + messagesLink + "&plugins=" + pluginsLink + "&bukkitVer=" + cratesPlus.getBukkitVersion();
-
-        HttpURLConnection connection;
-        try {
-            //Create connection
-            URL url = new URL(urlStr);
-            connection = (HttpURLConnection) url.openConnection();
-//			connection.setRequestMethod("POST");
-            connection.setDoInput(true);
-            connection.setDoOutput(true);
-
-            //Send request
-            DataOutputStream wr = new DataOutputStream(connection.getOutputStream());
-            wr.flush();
-            wr.close();
-
-            //Get Response
-            BufferedReader rd = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-            JSONParser jsonParser = new JSONParser();
-            JSONObject obj = (JSONObject) jsonParser.parse(rd.readLine());
-            return "https://mcdebug.xyz/cratesplus/share/" + obj.get("id") + "|" + "https://mcdebug.xyz/cratesplus/admin/" + obj.get("adminid");
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            return null;
-        }
     }
 
 }
