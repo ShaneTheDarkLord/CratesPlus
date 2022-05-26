@@ -33,12 +33,12 @@ public class SpawnEggNBT {
     public ItemStack toItemStack(int amount, boolean is_1_11) {
         ItemStack item = new ItemStack(LegacyMaterial.MONSTER_EGG.getMaterial(), amount);
         try {
-            Class craftItemStack = ReflectionUtil.getCBClass("inventory.CraftItemStack");
+            Class<?> craftItemStack = ReflectionUtil.getCBClass("inventory.CraftItemStack");
             Method asNMSCopyMethod = craftItemStack.getDeclaredMethod("asNMSCopy", ItemStack.class);
             Object nmsItemStack = asNMSCopyMethod.invoke(null, item);
-            Class nmsItemStackClass = ReflectionUtil.getNMSClass("ItemStack");
+            Class<?> nmsItemStackClass = ReflectionUtil.getNMSClass("ItemStack");
             Object nbtTagCompound = nmsItemStackClass.getDeclaredMethod("getTag").invoke(nmsItemStack);
-            Class nbtTagCompoundClass = ReflectionUtil.getNMSClass("NBTTagCompound");
+            Class<?> nbtTagCompoundClass = ReflectionUtil.getNMSClass("NBTTagCompound");
             if (nbtTagCompound == null) {
                 nbtTagCompound = nbtTagCompoundClass.getConstructor().newInstance();
             }
@@ -67,22 +67,20 @@ public class SpawnEggNBT {
         if (itemStack == null || itemStack.getType() != LegacyMaterial.MONSTER_EGG.getMaterial())
             return null;
         try {
-            Class craftItemStack = ReflectionUtil.getCBClass("inventory.CraftItemStack");
+            Class<?> craftItemStack = ReflectionUtil.getCBClass("inventory.CraftItemStack");
             Method asNMSCopyMethod = craftItemStack.getDeclaredMethod("asNMSCopy", ItemStack.class);
             Object nmsItemStack = asNMSCopyMethod.invoke(null, itemStack);
-            Class nmsItemStackClass = ReflectionUtil.getNMSClass("ItemStack");
+            Class<?> nmsItemStackClass = ReflectionUtil.getNMSClass("ItemStack");
             Object nbtTagCompound = nmsItemStackClass.getDeclaredMethod("getTag").invoke(nmsItemStack);
-            Class nbtTagCompoundClass = ReflectionUtil.getNMSClass("NBTTagCompound");
+            Class<?> nbtTagCompoundClass = ReflectionUtil.getNMSClass("NBTTagCompound");
             if (nbtTagCompound != null) {
                 Method getCompoundMethod = nbtTagCompoundClass.getDeclaredMethod("getCompound", String.class);
                 Object entityTagCompount = getCompoundMethod.invoke(nbtTagCompound, "EntityTag");
                 Method getStringMethod = nbtTagCompoundClass.getDeclaredMethod("getString", String.class);
                 String type = (String) getStringMethod.invoke(entityTagCompount, "id");
                 type = type.replaceFirst("minecraft:", "");
-                switch (type) {
-                    case "CAVESPIDER":
-                        type = "CAVE_SPIDER";
-                        break;
+                if ("CAVESPIDER".equals(type)) {
+                    type = "CAVE_SPIDER";
                 }
                 EntityType entityType = EntityType.fromName(type);
                 if (entityType == null || !entityType.isAlive())
