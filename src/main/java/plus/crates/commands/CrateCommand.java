@@ -369,24 +369,6 @@ public class CrateCommand implements CommandExecutor {
 
                     sender.sendMessage(cratesPlus.getPluginPrefix() + ChatColor.GREEN + "Given " + player.getDisplayName() + ChatColor.RESET + ChatColor.GREEN + " a crate");
                     break;
-                case "resetwinningcount":
-                    if (args.length < 2) {
-                        sender.sendMessage(cratesPlus.getPluginPrefix() + ChatColor.RED
-                                + "Correct Usage: /crate resetWinningCount <type>");
-                        return false;
-                    }
-                    Crate targetCrate = cratesPlus.getConfigHandler().getCrates().get(args[1].toLowerCase());
-                    if (targetCrate == null) {
-                        sender.sendMessage(cratesPlus.getPluginPrefix() + ChatColor.RED + "Crate not found");
-                        return false;
-                    }
-
-                    cratesPlus.getConfig().set("Crates." + targetCrate.getName() + ".WinningCount", null);
-                    for (Winning winning : targetCrate.getWinnings()) {
-                        winning.resetWinningCount();
-                    }
-                    sender.sendMessage(cratesPlus.getPluginPrefix() + ChatColor.GREEN + "Reset the winning count successfully");
-                    break;
 
             }
         } else {
