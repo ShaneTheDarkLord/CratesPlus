@@ -77,7 +77,6 @@ public abstract class Crate {
                     Bukkit.getLogger().warning(path + " is an invalid winning.");
                     continue;
                 }
-                winning.setWinningCount(cratesPlus.getConfig().getInt("Crates." + name + ".WinningCount." + id, 0));
                 totalPercentage = totalPercentage + winning.getPercentage();
                 winnings.add(winning);
             }

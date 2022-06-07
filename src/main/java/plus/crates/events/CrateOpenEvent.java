@@ -39,12 +39,6 @@ public class CrateOpenEvent extends Event {
             if (getCrate().getName().equalsIgnoreCase("legendary")) {
                 cratesPlus.logToFile(getPlayer().getName() + " Has opened a legendary crate");
             }
-            if (getCrate().getName().equalsIgnoreCase("mystical")) {
-                cratesPlus.logToFile(getPlayer().getName() + " Has opened a mystical crate");
-            }
-            if (getCrate().getName().equalsIgnoreCase("divine")) {
-                cratesPlus.logToFile(getPlayer().getName() + " Has opened a divine crate");
-            }
         }
     }
 

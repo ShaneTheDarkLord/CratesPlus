@@ -10,8 +10,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
 import plus.crates.commands.CrateCommand;
-import plus.crates.crates.Crate;
-import plus.crates.crates.Winning;
 import plus.crates.handlers.*;
 import plus.crates.listeners.BlockListeners;
 import plus.crates.listeners.GUIListeners;
@@ -163,28 +161,9 @@ public class CratesPlus extends JavaPlugin implements Listener {
     }
 
     public void onDisable() {
-        if (configHandler != null) {
-            saveAllWinningCounts();
-        }
         getConfigHandler().getCrates().forEach((key, crate) -> crate.onDisable());
     }
-    public void saveAllWinningCounts() {
-        boolean needSave = false;
-        for (Crate crate : configHandler.getCrates().values()) {
-            for (Winning winning : crate.getWinnings()) {
-                if (!winning.isWinningCountUpdated()) {
-                    continue;
-                }
 
-                getConfig().set("Crates." + crate.getName() + ".WinningCount." + winning.getId(), winning.getWinningCount());
-                needSave = true;
-            }
-        }
-
-        if (needSave) {
-            saveConfig();
-        }
-    }
     public String uploadConfig() {
         return uploadFile("config.yml");
     }

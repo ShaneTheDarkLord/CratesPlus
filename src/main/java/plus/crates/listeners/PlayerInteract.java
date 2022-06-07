@@ -7,7 +7,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import plus.crates.crates.Crate;
 import plus.crates.crates.KeyCrate;
@@ -39,10 +38,11 @@ public class PlayerInteract implements Listener {
             if (event.getClickedBlock().getType() != Material.CHEST)
                 return;
             Chest chest = (Chest)event.getClickedBlock().getState();
-            Inventory chestInventory = chest.getInventory();
             String title = chest.getCustomName();
             if (title == null || !title.contains(" Crate!"))
+                if (!title.contains(" Crate!"))
                 return;
+            assert title != null;
             crateType = ChatColor.stripColor(title.replaceAll(" Crate!", ""));
         } else {
             crateType = event.getClickedBlock().getMetadata("CrateType").get(0).asString();
