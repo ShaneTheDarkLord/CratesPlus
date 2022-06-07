@@ -1,8 +1,6 @@
 package plus.crates.Utils;
 
 import org.bukkit.ChatColor;
-import org.bukkit.Color;
-import org.bukkit.Location;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
@@ -11,8 +9,6 @@ import org.bukkit.inventory.meta.ItemMeta;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ThreadLocalRandom;
 
 public class LinfootUtil {
 
@@ -96,60 +92,5 @@ public class LinfootUtil {
         }
         return Integer.signum(vals1.length - vals2.length);
     }
-    public static <T> T getRandomEntry(Set<T> set) {
-        if (set == null) return null;
 
-        int random = ThreadLocalRandom.current().nextInt(set.size());
-
-        int i = 0;
-        for (T elem : set) {
-            if (i == random) return elem;
-            i++;
-        }
-
-        return null;
-    }
-
-    public static Color getColor(int i) {
-        switch (i) {
-            default:
-            case 1:
-                return Color.AQUA;
-            case 2:
-                return Color.BLACK;
-            case 3:
-                return Color.BLUE;
-            case 4:
-                return Color.FUCHSIA;
-            case 5:
-                return Color.GRAY;
-            case 6:
-                return Color.GREEN;
-            case 7:
-                return Color.LIME;
-            case 8:
-                return Color.MAROON;
-            case 9:
-                return Color.NAVY;
-            case 10:
-                return Color.OLIVE;
-            case 11:
-                return Color.ORANGE;
-            case 12:
-                return Color.PURPLE;
-            case 13:
-                return Color.RED;
-            case 14:
-                return Color.SILVER;
-            case 15:
-                return Color.TEAL;
-            case 16:
-                return Color.WHITE;
-            case 17:
-                return Color.YELLOW;
-        }
-    }
-    public static String formatLocation(Location location) {
-        return location.getWorld().getName() + "|" + location.getBlockX() + "|" + location.getBlockY() + "|" + location.getBlockZ();
-    }
 }

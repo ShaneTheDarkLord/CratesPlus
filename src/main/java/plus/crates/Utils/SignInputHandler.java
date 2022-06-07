@@ -8,7 +8,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import plus.crates.CratesPlus;
-import plus.crates.events.PlayerInputEvent;
+import plus.crates.Events.PlayerInputEvent;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -32,13 +32,12 @@ public class SignInputHandler {
             Object playerConnection = handle.getClass().getField("playerConnection").get(handle);
             final Channel channel = (Channel) channelField.get(playerConnection.getClass().getField("networkManager").get(playerConnection));
             if (channel != null) {
-                Class<?> signPacketClass = ReflectionUtil.getNMSClass("PacketPlayInUpdateSign");
                 channel.pipeline().addAfter("decoder", "update_sign", new MessageToMessageDecoder<Object>() {
                     @Override
                     protected void decode(ChannelHandlerContext channelHandlerContext, Object object, List list) throws Exception {
                         try {
                             if (object.toString().contains("PacketPlayInUpdateSign")) {
-                                Class<?> iChatBaseComponentClass = ReflectionUtil.getNMSClass("IChatBaseComponent");
+                                Class iChatBaseComponentClass = ReflectionUtil.getNMSClass("IChatBaseComponent");
                                 Object packet = ReflectionUtil.getNMSClass("PacketPlayInUpdateSign").cast(object);
                                 Method method = null;
 
@@ -67,13 +66,9 @@ public class SignInputHandler {
                                 if (lines.isEmpty()) {
                                     player.sendMessage(ChatColor.RED + "Unable to handle input");
                                 } else {
-                                    Bukkit.getScheduler().runTask(JavaPlugin.getPlugin(CratesPlus.class), () -> {
-                                        Bukkit.getPluginManager().callEvent(new PlayerInputEvent(player, lines));
-                                        SignInputHandler.ejectNetty(player);
-                                    });
+                                    Bukkit.getScheduler().runTask(JavaPlugin.getPlugin(CratesPlus.class), () -> Bukkit.getPluginManager().callEvent(new PlayerInputEvent(player, lines)));
                                 }
                             }
-                            //noinspection unchecked
                             list.add(object);
                         } catch (Exception e) {
                             e.printStackTrace();

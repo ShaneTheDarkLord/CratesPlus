@@ -10,11 +10,10 @@ public enum LegacyMaterial {
     STAINED_GLASS_PANE("LEGACY_STAINED_GLASS_PANE"),
     MONSTER_EGG("LEGACY_MONSTER_EGG"),
     REDSTONE_TORCH_ON("LEGACY_REDSTONE_TORCH_ON");
-
-    private static final boolean IS_113;
+    private static boolean is113;
 
     static {
-        IS_113 = LinfootUtil.versionCompare(JavaPlugin.getPlugin(CratesPlus.class).getBukkitVersion(), "1.13") > -1;
+        is113 = LinfootUtil.versionCompare(JavaPlugin.getPlugin(CratesPlus.class).getBukkitVersion(), "1.13") > -1;
     }
 
     private final String oldName;
@@ -26,7 +25,7 @@ public enum LegacyMaterial {
     }
 
     public Material getMaterial() {
-        if (IS_113) {
+        if (is113) {
             return Material.valueOf(newName);
         } else {
             return Material.valueOf(oldName);

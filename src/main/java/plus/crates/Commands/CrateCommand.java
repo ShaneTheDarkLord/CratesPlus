@@ -1,4 +1,4 @@
-package plus.crates.commands;
+package plus.crates.Commands;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -12,16 +12,23 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import plus.crates.crates.Crate;
-import plus.crates.crates.KeyCrate;
-import plus.crates.crates.MysteryCrate;
+import org.bukkit.plugin.Plugin;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import plus.crates.Crates.Crate;
+import plus.crates.Crates.KeyCrate;
+import plus.crates.Crates.MysteryCrate;
 import plus.crates.CratesPlus;
-import plus.crates.crates.Winning;
-import plus.crates.handlers.MessageHandler;
-import plus.crates.opener.Opener;
+import plus.crates.Handlers.MessageHandler;
+import plus.crates.Opener.Opener;
 import plus.crates.Utils.*;
 
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.InputStreamReader;
 import java.lang.reflect.Constructor;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.Map;
 
 public class CrateCommand implements CommandExecutor {
@@ -35,7 +42,7 @@ public class CrateCommand implements CommandExecutor {
     public boolean onCommand(final CommandSender sender, Command command, String string, String[] args) {
 
         if (sender instanceof Player && !sender.hasPermission("cratesplus.claim")) {
-            if (args.length == 0 || args[0].equalsIgnoreCase("claim")) {
+            if (args.length == 0 || (args.length > 0 && args[0].equalsIgnoreCase("claim"))) {
                 // Assume player and show "claim" GUI
                 doClaim((Player) sender);
                 return true;
@@ -299,7 +306,7 @@ public class CrateCommand implements CommandExecutor {
                         OfflinePlayer offlinePlayer = null;
                         if (!args[1].equalsIgnoreCase("all") && !args[1].equalsIgnoreCase("alloffline")) {
                             offlinePlayer = Bukkit.getOfflinePlayer(args[1]);
-                            if (!offlinePlayer.hasPlayedBefore() && !offlinePlayer.isOnline()) { // Check if the player is online as "hasPlayedBefore" doesn't work until they disconnect?
+                            if (offlinePlayer == null || (!offlinePlayer.hasPlayedBefore() && !offlinePlayer.isOnline())) { // Check if the player is online as "hasPlayedBefore" doesn't work until they disconnect?
                                 sender.sendMessage(cratesPlus.getPluginPrefix() + ChatColor.RED + "The player " + args[1] + " was not found");
                                 return false;
                             }
@@ -369,9 +376,9 @@ public class CrateCommand implements CommandExecutor {
 
                     sender.sendMessage(cratesPlus.getPluginPrefix() + ChatColor.GREEN + "Given " + player.getDisplayName() + ChatColor.RESET + ChatColor.GREEN + " a crate");
                     break;
-
             }
         } else {
+
             // Help Messages
             sender.sendMessage("§e§l--------§6§l» §3§lKoffee§b§lCrates §fHelp §6§l«§e§l--------");
             sender.sendMessage("§6§l»§r §b/crate reload » §eReload configuration for KoffeeCrates");
@@ -380,7 +387,6 @@ public class CrateCommand implements CommandExecutor {
             sender.sendMessage("§6§l»§r §b/crate delete <name> » §eDelete a crate from the config");
             sender.sendMessage("§6§l»§r §b/crate give <player/all> [crate] [amount] » §eGive player a crate/key, if no crate given it will be random");
             sender.sendMessage("§6§l»§r §b/crate crate <type> [player] » §eGive player a crate to be placed, for use by admins");
-            sender.sendMessage("§6§l»§r §b/crate resetwinningcount <type> » §eReset specific crate's winning counts");
             sender.sendMessage("§e§l--------§6§l» §3§lKoffee§b§lCrates §fHelp §6§l«§e§l--------");
         }
 
@@ -394,7 +400,7 @@ public class CrateCommand implements CommandExecutor {
             return;
         }
         GUI gui = new GUI("Claim Crate Keys");
-        int i = 0;
+        Integer i = 0;
         for (Map.Entry<String, Integer> map : cratesPlus.getCrateHandler().getPendingKey(player.getUniqueId()).entrySet()) {
             final String crateName = map.getKey();
             final KeyCrate crate = (KeyCrate) cratesPlus.getConfigHandler().getCrates().get(crateName.toLowerCase());

@@ -4,24 +4,26 @@ import com.google.common.io.ByteStreams;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
 import org.bukkit.*;
+import org.bukkit.block.Block;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
+import org.bukkit.metadata.MetadataValue;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
-import plus.crates.commands.CrateCommand;
-import plus.crates.handlers.*;
-import plus.crates.listeners.BlockListeners;
-import plus.crates.listeners.GUIListeners;
-import plus.crates.listeners.PlayerInteract;
-import plus.crates.listeners.PlayerJoin;
-import plus.crates.storage.FlatStorageHandler;
-import plus.crates.storage.IStorageHandler;
+import plus.crates.Commands.CrateCommand;
+import plus.crates.Crates.Crate;
+import plus.crates.Crates.KeyCrate;
+import plus.crates.Handlers.*;
+import plus.crates.Listeners.BlockListeners;
+import plus.crates.Listeners.GUIListeners;
+import plus.crates.Listeners.PlayerInteract;
+import plus.crates.Listeners.PlayerJoin;
 import plus.crates.Utils.*;
 
 import java.io.*;
 import java.util.*;
-import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -35,11 +37,11 @@ public class CratesPlus extends JavaPlugin implements Listener {
     private CrateHandler crateHandler;
     private SettingsHandler settingsHandler;
     private HologramHandler hologramHandler;
-    private IStorageHandler storageHandler;
+    private StorageHandler storageHandler;
     private String bukkitVersion = "0.0";
     private Version_Util version_util;
     private static OpenHandler openHandler;
-    private final List<UUID> creatingCrate = new ArrayList<>();
+    private final ArrayList<UUID> creatingCrate = new ArrayList<>();
 
     public void onEnable() {
         plugin = this;
@@ -84,7 +86,15 @@ public class CratesPlus extends JavaPlugin implements Listener {
         saveConfig();
 
         hologramHandler = new HologramHandler();
-        storageHandler = new FlatStorageHandler(this);
+
+        StorageHandler.StorageType storageType = StorageHandler.StorageType.FLAT;
+        try {
+            storageType = StorageHandler.StorageType.valueOf(Objects.requireNonNull(getConfig().getString("Storage Type", "FLAT")).toUpperCase());
+        } catch (Exception e) {
+            getLogger().warning(getConfig().getString("Storage Type", "FLAT") + " is not a valid storage type! Falling back to flat!");
+        }
+        storageHandler = new StorageHandler(this, storageType);
+
         // Load new messages.yml
         File messagesFile = new File(getDataFolder(), "messages.yml");
         if (!messagesFile.exists()) {
@@ -95,7 +105,7 @@ public class CratesPlus extends JavaPlugin implements Listener {
                 assert inputStream != null;
                 ByteStreams.copy(inputStream, outputStream);
             } catch (IOException e) {
-                getLogger().log(Level.SEVERE, "Failed to load messages.yml", e);
+                e.printStackTrace();
             }
         }
 
@@ -134,6 +144,8 @@ public class CratesPlus extends JavaPlugin implements Listener {
         openHandler = new OpenHandler(this);
 
         settingsHandler = new SettingsHandler(this);
+
+        loadMetaData();
 
         console.sendMessage(ChatColor.AQUA + getDescription().getName() + " Version " + getDescription().getVersion());
 
@@ -181,27 +193,27 @@ public class CratesPlus extends JavaPlugin implements Listener {
         if (!file.exists())
             return null;
         LineIterator it;
-        StringBuilder lines = new StringBuilder();
+        String lines = "";
         try {
             it = FileUtils.lineIterator(file, "UTF-8");
             try {
                 while (it.hasNext()) {
                     String line = it.nextLine();
-                    lines.append(line).append("\n");
+                    lines += line + "\n";
                 }
             } finally {
                 it.close();
             }
         } catch (IOException e) {
-            getLogger().log(Level.SEVERE, "failed to upload file", e);
+            e.printStackTrace();
         }
-        return MCDebug.paste(fileName, lines.toString());
+        return MCDebug.paste(fileName, lines);
     }
     public void reloadPlugin() {
         reloadConfig();
 
         // Do Prefix
-        pluginPrefix = ChatColor.translateAlternateColorCodes('&', Objects.requireNonNull(getConfig().getString("Prefix", "&8&l[&3&lKoffee&b&lCrates&8&l] &r")));
+        pluginPrefix = ChatColor.translateAlternateColorCodes('&', Objects.requireNonNull(getConfig().getString("Prefix", "&8[&6Complex&eCrates&8] &r")));
 
         // Reload Configuration
         configHandler = new ConfigHandler(getConfig(), this);
@@ -211,6 +223,106 @@ public class CratesPlus extends JavaPlugin implements Listener {
 
     }
 
+    private void loadMetaData() {
+        if (!getStorageHandler().getFlatConfig().isSet("Crate Locations"))
+            return;
+        for (String name : Objects.requireNonNull(getStorageHandler().getFlatConfig().getConfigurationSection("Crate Locations")).getKeys(false)) {
+            final Crate crate = configHandler.getCrate(name.toLowerCase());
+            if (crate == null)
+                continue;
+            if (!(crate instanceof KeyCrate))
+                continue;
+            KeyCrate keyCrate = (KeyCrate) crate;
+            String path = "Crate Locations." + name;
+            List<String> locations = getStorageHandler().getFlatConfig().getStringList(path);
+
+            for (String location : locations) {
+                List<String> strings = Arrays.asList(location.split("\\|"));
+                if (strings.size() < 4)
+                    continue; // Somethings broke?
+                if (strings.size() > 4) {
+                    // Somethings broke? But we'll try and fix it!
+                    for (int i = 0; i < strings.size(); i++) {
+                        if (strings.get(i).isEmpty() || strings.get(i).equals("")) {
+                            strings.remove(i);
+                        }
+                    }
+                }
+                Location locationObj;
+                try {
+                    locationObj = new Location(Bukkit.getWorld(strings.get(0)), Double.parseDouble(strings.get(1)), Double.parseDouble(strings.get(2)), Double.parseDouble(strings.get(3)));
+                    Block block = locationObj.getBlock();
+                    if (block.getType().equals(Material.AIR)) {
+                        getLogger().warning("No block found at " + location + " removing from data.yml");
+                        keyCrate.removeFromConfig(locationObj);
+                        continue;
+                    }
+                    Location location1 = locationObj.getBlock().getLocation().add(0.5, 0.5, 0.5);
+                    keyCrate.loadHolograms(location1);
+                    final CratesPlus cratesPlus = this;
+                    block.setMetadata("CrateType", new MetadataValue() {
+                        @Override
+                        public Object value() {
+                            return crate.getName(false);
+                        }
+
+                        @Override
+                        public int asInt() {
+                            return 0;
+                        }
+
+                        @Override
+                        public float asFloat() {
+                            return 0;
+                        }
+
+                        @Override
+                        public double asDouble() {
+                            return 0;
+                        }
+
+                        @Override
+                        public long asLong() {
+                            return 0;
+                        }
+
+                        @Override
+                        public short asShort() {
+                            return 0;
+                        }
+
+                        @Override
+                        public byte asByte() {
+                            return 0;
+                        }
+
+                        @Override
+                        public boolean asBoolean() {
+                            return false;
+                        }
+
+                        @Override
+                        public String asString() {
+                            return Objects.requireNonNull(value()).toString();
+                        }
+
+                        @Override
+                        public Plugin getOwningPlugin() {
+                            return cratesPlus;
+                        }
+
+                        @Override
+                        public void invalidate() {
+
+                        }
+                    });
+                } catch (Exception ignored) {
+                }
+            }
+
+
+        }
+    }
 
     public SettingsHandler getSettingsHandler() {
         return settingsHandler;
@@ -228,7 +340,7 @@ public class CratesPlus extends JavaPlugin implements Listener {
         return hologramHandler;
     }
 
-    public IStorageHandler getStorageHandler() {
+    public StorageHandler getStorageHandler() {
         return storageHandler;
     }
 
