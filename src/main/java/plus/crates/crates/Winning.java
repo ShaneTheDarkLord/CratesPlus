@@ -24,10 +24,13 @@ import java.util.regex.Pattern;
 public class Winning {
     private final CratesPlus cratesPlus;
     private final Crate crate;
+    private String id;
     private boolean valid = false;
     private boolean command = false;
     private boolean always = false;
     private double percentage = 0;
+    private int winningCount = 0;
+    private boolean winningCountUpdated = false;
     private ItemStack previewItemStack;
     private ItemStack winningItemStack;
     private List<String> commands = new ArrayList<>();
@@ -36,7 +39,7 @@ public class Winning {
     public Winning(Crate crate, String path, CratesPlus cratesPlus, ConfigHandler configHandler) {
         this.cratesPlus = cratesPlus;
         this.crate = crate;
-
+        this.id = path.substring(path.lastIndexOf(".") + 1);
         if (configHandler != null && configHandler.isDebugMode()) {
             cratesPlus.getLogger().info("Loading data for \"" + path + "\"");
         }
@@ -224,11 +227,18 @@ public class Winning {
     }
 
     public ItemStack getPreviewItemStack() {
-        return previewItemStack.clone(); // Clone it so it can't be changed
+        ItemStack item = previewItemStack.clone();
+        ItemMeta meta = item.getItemMeta();
+        List<String> loreList = new ArrayList<>(meta.getLore());
+        loreList.add(ChatColor.RED + "Number of wins" + ChatColor.GREEN + ": " + ChatColor.YELLOW + winningCount + "times");
+        meta.setLore(loreList);
+        item.setItemMeta(meta);
+        return item; // Clone it so it can't be changed
     }
 
     public ItemStack getWinningItemStack() {
         return winningItemStack.clone(); // Clone it so it can't be changed and because Bukkit resets the stack size? Check issue #198 on this bug.
+
     }
 
     public ItemStack runWin(final Player player) {
@@ -245,10 +255,29 @@ public class Winning {
 
         if (crate.isFirework())
             cratesPlus.getCrateHandler().spawnFirework(player.getLocation());
-
+        winningCount++;
+        winningCountUpdated = true;
         return null;
+
+    }
+    public void setWinningCount(int count) {
+        winningCount = count;
     }
 
+    public int getWinningCount() {
+        return winningCount;
+    }
+
+    public boolean isWinningCountUpdated() {
+        return winningCountUpdated;
+    }
+    public String getId() {
+        return id;
+    }
+    public void resetWinningCount() {
+        winningCount = 0;
+        winningCountUpdated = false;
+    }
     private void runCommands(Player player) {
         for (String command : getCommands()) {
             command = command.replaceAll("%name%", player.getName());

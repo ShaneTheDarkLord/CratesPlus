@@ -16,6 +16,7 @@ import plus.crates.crates.Crate;
 import plus.crates.crates.KeyCrate;
 import plus.crates.crates.MysteryCrate;
 import plus.crates.CratesPlus;
+import plus.crates.crates.Winning;
 import plus.crates.handlers.MessageHandler;
 import plus.crates.opener.Opener;
 import plus.crates.Utils.*;
@@ -368,6 +369,24 @@ public class CrateCommand implements CommandExecutor {
 
                     sender.sendMessage(cratesPlus.getPluginPrefix() + ChatColor.GREEN + "Given " + player.getDisplayName() + ChatColor.RESET + ChatColor.GREEN + " a crate");
                     break;
+                case "resetwinningcount":
+                    if (args.length < 2) {
+                        sender.sendMessage(cratesPlus.getPluginPrefix() + ChatColor.RED
+                                + "Correct Usage: /crate resetWinningCount <type>");
+                        return false;
+                    }
+                    Crate targetCrate = cratesPlus.getConfigHandler().getCrates().get(args[1].toLowerCase());
+                    if (targetCrate == null) {
+                        sender.sendMessage(cratesPlus.getPluginPrefix() + ChatColor.RED + "Crate not found");
+                        return false;
+                    }
+
+                    cratesPlus.getConfig().set("Crates." + targetCrate.getName() + ".WinningCount", null);
+                    for (Winning winning : targetCrate.getWinnings()) {
+                        winning.resetWinningCount();
+                    }
+                    sender.sendMessage(cratesPlus.getPluginPrefix() + ChatColor.GREEN + "Reset the winning count successfully");
+                    break;
             }
         } else {
             // Help Messages
@@ -378,6 +397,7 @@ public class CrateCommand implements CommandExecutor {
             sender.sendMessage("§6§l»§r §b/crate delete <name> » §eDelete a crate from the config");
             sender.sendMessage("§6§l»§r §b/crate give <player/all> [crate] [amount] » §eGive player a crate/key, if no crate given it will be random");
             sender.sendMessage("§6§l»§r §b/crate crate <type> [player] » §eGive player a crate to be placed, for use by admins");
+            sender.sendMessage("§6§l»§r §b/crate resetwinningcount <type> » §eReset specific crate's winning counts");
             sender.sendMessage("§e§l--------§6§l» §3§lKoffee§b§lCrates §fHelp §6§l«§e§l--------");
         }
 
