@@ -28,19 +28,18 @@ public class ReflectionUtil {
     public static Class getClass(String name) {
         try {
             return Class.forName(name);
-        } catch (ClassNotFoundException e) {
+        } catch (ClassNotFoundException ignored) {
         }
         return null;
     }
 
-    public static Class getNMSClass(String className) {
+    public static Class<?> getNMSClass(String className) {
         return getClass(NMS_PATH + "." + className);
     }
 
-    public static Class getCBClass(String className) {
+    public static Class<?> getCBClass(String className) {
         return getClass(CB_PATH + "." + className);
     }
-
     /**
      * Field stuff
      */
@@ -62,16 +61,21 @@ public class ReflectionUtil {
 
     public static <T> T getField(Class<?> clazz, String fieldName, Object instance) {
         try {
-            return (T) getField(clazz, fieldName).get(instance);
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
+            Field field = getField(clazz, fieldName);
+            if (field == null) return null;
+            //noinspection unchecked
+            return (T) field.get(instance);
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            }
+            return null;
         }
-        return null;
-    }
 
     public static void setField(Class<?> clazz, String fieldName, Object instance, Object value) {
         try {
-            getField(clazz, fieldName).set(instance, value);
+            Field field = getField(clazz, fieldName);
+            if (field == null) return;
+            field.set(instance, value);
         } catch (IllegalAccessException e) {
             e.printStackTrace();
         }
@@ -98,18 +102,17 @@ public class ReflectionUtil {
 
     public static <T> T invokeMethod(Method method, Object instance, Object... args) {
         try {
+            //noinspection unchecked
             return (T) method.invoke(instance, args);
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (InvocationTargetException e) {
+        } catch (IllegalAccessException | InvocationTargetException e) {
             e.printStackTrace();
         }
         return null;
     }
 
-    public static Constructor getConstructor(Class<?> clazz, Class<?>... params) {
+    public static <T> Constructor<T> getConstructor(Class<T> clazz, Class<?>... params) {
         try {
-            Constructor constructor = clazz.getConstructor(params);
+            Constructor<T> constructor = clazz.getConstructor(params);
 
             if (!constructor.isAccessible()) {
                 constructor.setAccessible(true);
@@ -122,14 +125,10 @@ public class ReflectionUtil {
         return null;
     }
 
-    public static <T> T invokeConstructor(Constructor constructor, Object... args) {
+    public static <T> T invokeConstructor(Constructor<T> constructor, Object... args) {
         try {
             return (T) constructor.newInstance(args);
-        } catch (InstantiationException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (InvocationTargetException e) {
+        } catch (InstantiationException | InvocationTargetException | IllegalAccessException e) {
             e.printStackTrace();
         }
         return null;
@@ -138,7 +137,7 @@ public class ReflectionUtil {
     public static Object getBlockPosition(Player player) {
         try {
             Object handle = player.getClass().getMethod("getHandle").invoke(player);
-            Constructor constructor = ReflectionUtil.getNMSClass("BlockPosition").getConstructor(ReflectionUtil.getNMSClass("Entity"));
+            Constructor<?> constructor = ReflectionUtil.getNMSClass("BlockPosition").getConstructor(ReflectionUtil.getNMSClass("Entity"));
             return constructor.newInstance(handle);
         } catch (Exception e) {
             e.printStackTrace();
